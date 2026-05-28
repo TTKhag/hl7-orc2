@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini API Tool</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+    :root {
+        --bg: #f0f2f5;
+        --surface: #ffffff;
+        --border: #e0e4ea;
+        --blue: #1565c0;
+        --blue-light: #e3f2fd;
+        --blue-btn: #1976d2;
+        --blue-btn-hover: #1254a8;
+        --green: #2e7d32;
+        --green-btn: #388e3c;
+        --green-btn-hover: #276128;
+        --green-light: #e8f5e9;
+        --green-border: #a5d6a7;
+        --red-light: #ffebee;
+        --red-border: #ef9a9a;
+        --red-text: #c62828;
+        --warn-light: #fff3e0;
+        --warn-border: #ffb74d;
+        --warn-text: #e65100;
+        --text: #222;
+        --muted: #555;
+        --code-bg: #1e1e1e;
+        --code-fg: #d4d4d4;
+        --hl7-bg: #0d1117;
+        --hl7-fg: #58d68d;
+        --radius: 8px;
+        --shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'DM Sans', Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 32px 20px;
+        min-height: 100vh;
+    }
+
+    .page-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--blue);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+    }
+
+    h2 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--blue);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    label {
+        font-size: 13px;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+
+    input[type=text], input[type=number], input[type=password], select {
+        width: 100%;
+        max-width: 500px;
+        padding: 9px 12px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 14px;
+        font-family: inherit;
+        background: #fafbfc;
+        color: var(--text);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+    }
+
+    input:focus, select:focus {
+        border-color: var(--blue-btn);
+        box-shadow: 0 0 0 3px rgba(25,118,210,0.1);
+        background: #fff;
+    }
+
+    button {
+        padding: 9px 18px;
+        cursor: pointer;
+        margin-right: 8px;
+        margin-top: 4px;
+        border: none;
+        border-radius: 5px;
+        background: var(--blue-btn);
+        color: #fff;
+        font-size: 14px;
+        font-family: inherit;
+        font-weight: 500;
+        transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover  { background: var(--blue-btn-hover); }
+    button:active { transform: scale(0.98); }
+
+    button.green       { background: var(--green-btn); }
+    button.green:hover { background: var(--green-btn-hover); }
+
+    button.danger       { background: #c62828; }
+    button.danger:hover { background: #a31515; }
+
+    button.sm {
+        padding: 6px 12px;
+        font-size: 12px;
+        margin-top: 0;
+    }
+
+    textarea {
+        width: 100%;
+        height: 380px;
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-size: 13px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 12px;
+        background: var(--code-bg);
+        color: var(--code-fg);
+        resize: vertical;
+        outline: none;
+        line-height: 1.5;
+        margin-top: 6px;
+    }
+
+    textarea.hl7 {
+        height: 200px;
+        background: var(--hl7-bg);
+        color: var(--hl7-fg);
+        letter-spacing: 0.3px;
+    }
+
+    .token-box {
+        background: var(--green-light);
+        border: 1px solid var(--green-border);
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        word-break: break-all;
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-size: 12px;
+        color: var(--green);
+    }
+
+    .token-box.error {
+        background: var(--red-light);
+        border-color: var(--red-border);
+        color: var(--red-text);
+    }
+
+    .token-label {
+        font-weight: 700;
+        font-size: 13px;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .alert-error {
+        background: var(--warn-light);
+        border: 1px solid var(--warn-border);
+        color: var(--warn-text);
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-top: 14px;
+        font-size: 14px;
+    }
+
+    .alert-success {
+        background: var(--green-light);
+        border: 1px solid var(--green-border);
+        color: var(--green);
+        padding: 10px 16px;
+        border-radius: 6px;
+        margin-top: 14px;
+        font-size: 13px;
+    }
+
+    .mapping-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+
+    .mapping-table th {
+        background: var(--blue-light);
+        padding: 8px 12px;
+        text-align: left;
+        border: 1px solid #bbdefb;
+        color: var(--blue);
+        font-weight: 600;
+    }
+
+    .mapping-table td {
+        padding: 7px 12px;
+        border: 1px solid #e0e0e0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+    }
+
+    .mapping-table tr:nth-child(even) td { background: #fafafa; }
+
+    .copy-btn {
+        background: #546e7a;
+        font-size: 12px;
+        padding: 6px 12px;
+        margin-top: 8px;
+    }
+    .copy-btn:hover { background: #37474f; }
+
+    #copyNotice {
+        font-size: 13px;
+        color: #388e3c;
+        margin-left: 8px;
+        display: none;
+    }
+
+    .server-list {
+        margin-top: 14px;
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+    }
+
+    .server-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 10px;
+        border-radius: 5px;
+        background: #f7f9fc;
+        border: 1px solid var(--border);
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .server-item span { color: var(--muted); }
+
+    .loading {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #fff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+    /* CORS notice */
+    .cors-notice {
+        background: #fff8e1;
+        border: 1px solid #ffe082;
+        border-left: 4px solid #f9a825;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        color: #5d4037;
+        line-height: 1.6;
+    }
+    .cors-notice strong { color: #e65100; }
+</style>
+</head>
+<body>
+
+<div class="page-title">🏥 Mini API Tool — HIS</div>
+
+<!-- CORS NOTICE -->
+<div class="cors-notice">
+    ⚠️ <strong>Lưu ý CORS:</strong> Khi chạy trên GitHub Pages, trình duyệt sẽ gửi request trực tiếp tới API server.
+    Nếu API server <strong>chưa bật CORS</strong> cho domain của bạn, request sẽ bị chặn.
+    Trong trường hợp đó, hãy dùng extension <strong>CORS Unblock</strong> trên Chrome/Firefox, hoặc chạy file này ở <strong>localhost</strong>.
+</div>
+
+<!-- ====================================================== -->
+<!-- ENVIRONMENT -->
+<!-- ====================================================== -->
+
+<div class="box" id="envBox">
+    <h2>⚙️ Environment</h2>
+
+    <label>Tên Environment:</label>
+    <input type="text" id="serverName" placeholder="VD: PROD">
+
+    <label>Base URL:</label>
+    <input type="text" id="serverUrl" placeholder="VD: https://api.domain.com">
+
+    <button onclick="saveServer()">💾 Lưu Environment</button>
+
+    <div class="server-list" id="serverList"></div>
+</div>
+
+<!-- ====================================================== -->
+<!-- API GET -->
+<!-- ====================================================== -->
+
+<div class="box">
+    <h2>🔍 API GET nb-dich-vu/tong-hop</h2>
+
+    <label>Environment:</label>
+    <select id="envSelect"></select>
+
+    <label>Tài khoản:</label>
+    <input type="text" id="taiKhoan" placeholder="Nhập tài khoản">
+
+    <label>Mật khẩu MD5:</label>
+    <input type="text" id="matKhau" placeholder="Nhập mật khẩu MD5">
+
+    <label>nbDotDieuTriId:</label>
+    <input type="number" id="nbDotDieuTriId" placeholder="Nhập số">
+
+    <div style="margin-top:10px;">
+        <button onclick="refreshToken()" id="btnToken">🔄 Lấy lại Token</button>
+        <button onclick="getData()" id="btnGet">📡 GET Dữ Liệu</button>
+    </div>
+</div>
+
+<!-- TOKEN BOX -->
+<div id="tokenBox" style="display:none;" class="token-box">
+    <span class="token-label" id="tokenLabel"></span>
+    <span id="tokenValue"></span>
+</div>
+
+<!-- JSON RESPONSE -->
+<div class="box" id="responseBox" style="display:none;">
+    <h2>📋 JSON Response</h2>
+    <textarea id="responseArea" readonly></textarea>
+</div>
+
+<!-- ====================================================== -->
+<!-- SINH BẢN TIN HL7 -->
+<!-- ====================================================== -->
+
+<div class="box">
+    <h2>📨 Sinh bản tin đổi trạng thái chỉ định (HL7)</h2>
+
+    <table class="mapping-table">
+        <thead>
+            <tr>
+                <th>Field JSON</th>
+                <th>Vị trí HL7</th>
+                <th>Segment</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>soPhieu</td><td>MSH-9</td><td>MSH</td></tr>
+            <tr><td>maNb</td><td>PID-2</td><td>PID</td></tr>
+            <tr><td>tenNb</td><td>PID-5.2 (component 2)</td><td>PID</td></tr>
+            <tr><td>maHoSo</td><td>PV1-19</td><td>PV1</td></tr>
+            <tr><td>soPhieu</td><td>ORC-2</td><td>ORC</td></tr>
+            <tr><td>id</td><td>OBR-2</td><td>OBR</td></tr>
+            <tr><td>maDichVu</td><td>OBR-4.1</td><td>OBR</td></tr>
+            <tr><td>tenDichVu</td><td>OBR-4.2</td><td>OBR</td></tr>
+        </tbody>
+    </table>
+
+    <label>Mã dịch vụ (maDichVu) cần tìm:</label>
+    <input type="text" id="maDichVuSearch" placeholder="VD: XN08" style="max-width:300px;">
+
+    <div style="margin-top:8px;">
+        <button class="green" onclick="genHL7()">⚡ Sinh bản tin HL7</button>
+    </div>
+
+    <div id="hl7Error"   style="display:none;" class="alert-error"></div>
+    <div id="hl7Success" style="display:none;" class="alert-success"></div>
+
+    <div id="hl7ResultBox" style="display:none; margin-top:12px;">
+        <textarea class="hl7" id="hl7Output" readonly></textarea>
+        <button class="copy-btn" onclick="copyHL7()">📋 Copy bản tin</button>
+        <span id="copyNotice">Đã copy!</span>
+    </div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+
+// Mặc định servers
+const DEFAULT_SERVERS = { "TUDU PROD": "https://api-bvtudu.tudu.com.vn" };
+
+let state = {
+    servers:      JSON.parse(localStorage.getItem('apiTool_servers')  || 'null') || { ...DEFAULT_SERVERS },
+    token:        localStorage.getItem('apiTool_token')   || '',
+    lastResponse: JSON.parse(localStorage.getItem('apiTool_lastResponse') || 'null')
+};
+
+function saveState() {
+    localStorage.setItem('apiTool_servers',      JSON.stringify(state.servers));
+    localStorage.setItem('apiTool_token',        state.token);
+    localStorage.setItem('apiTool_lastResponse', JSON.stringify(state.lastResponse));
+}
+
+/* ============================================================
+   RENDER SERVERS
+   ============================================================ */
+
+function renderServers() {
+    // Dropdown
+    const sel = document.getElementById('envSelect');
+    sel.innerHTML = '';
+    for (const [name, url] of Object.entries(state.servers)) {
+        const opt = document.createElement('option');
+        opt.value = url;
+        opt.textContent = name + ' => ' + url;
+        sel.appendChild(opt);
+    }
+
+    // List
+    const list = document.getElementById('serverList');
+    list.innerHTML = '<strong style="font-size:13px;color:#555;">Danh sách đã lưu:</strong><br><br>';
+    for (const [name, url] of Object.entries(state.servers)) {
+        const div = document.createElement('div');
+        div.className = 'server-item';
+        div.innerHTML = `
+            <span><b>${escHtml(name)}</b>&nbsp;&nbsp;${escHtml(url)}</span>
+            <button class="sm danger" onclick="deleteServer('${escAttr(name)}')">🗑 Xoá</button>
+        `;
+        list.appendChild(div);
+    }
+}
+
+function saveServer() {
+    const name = document.getElementById('serverName').value.trim();
+    const url  = document.getElementById('serverUrl').value.trim();
+    if (!name || !url) { alert('Vui lòng nhập đủ Tên và URL.'); return; }
+    state.servers[name] = url;
+    saveState();
+    renderServers();
+    document.getElementById('serverName').value = '';
+    document.getElementById('serverUrl').value  = '';
+}
+
+function deleteServer(name) {
+    if (!confirm('Xoá server "' + name + '"?')) return;
+    delete state.servers[name];
+    saveState();
+    renderServers();
+}
+
+/* ============================================================
+   API HELPERS
+   ============================================================ */
+
+async function getAccessToken(baseUrl, taiKhoan, matKhau) {
+    const url = baseUrl + '/api/his/v1/auth/login';
+    const res = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ taiKhoan, matKhau })
+    });
+    const data = await res.json();
+    if (data.access_token)             return data.access_token;
+    if (data?.data?.access_token)      return data.data.access_token;
+    if (data.token)                    return data.token;
+    return 'DEBUG_LOGIN_RESPONSE: ' + JSON.stringify(data);
+}
+
+function showToken(token) {
+    const box   = document.getElementById('tokenBox');
+    const label = document.getElementById('tokenLabel');
+    const val   = document.getElementById('tokenValue');
+    const isErr = token.startsWith('DEBUG_LOGIN_RESPONSE:');
+    box.className = 'token-box' + (isErr ? ' error' : '');
+    label.textContent = isErr ? '❌ Lỗi lấy token:' : '✅ Token đang dùng:';
+    val.textContent   = token;
+    box.style.display = 'block';
+}
+
+function setLoading(btnId, loading, originalText) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+        btn.innerHTML = '<span class="loading"></span>Đang xử lý...';
+        btn.disabled  = true;
+    } else {
+        btn.innerHTML = originalText;
+        btn.disabled  = false;
+    }
+}
+
+/* ============================================================
+   REFRESH TOKEN
+   ============================================================ */
+
+async function refreshToken() {
+    const baseUrl  = document.getElementById('envSelect').value;
+    const taiKhoan = document.getElementById('taiKhoan').value.trim();
+    const matKhau  = document.getElementById('matKhau').value.trim();
+    if (!taiKhoan || !matKhau) { alert('Vui lòng nhập Tài khoản và Mật khẩu.'); return; }
+
+    setLoading('btnToken', true, '🔄 Lấy lại Token');
+    try {
+        const token = await getAccessToken(baseUrl, taiKhoan, matKhau);
+        state.token = token;
+        saveState();
+        showToken(token);
+    } catch (err) {
+        showToken('DEBUG_LOGIN_RESPONSE: ' + err.message);
+    }
+    setLoading('btnToken', false, '🔄 Lấy lại Token');
+}
+
+/* ============================================================
+   GET DATA
+   ============================================================ */
+
+async function getData() {
+    const baseUrl        = document.getElementById('envSelect').value;
+    const taiKhoan       = document.getElementById('taiKhoan').value.trim();
+    const matKhau        = document.getElementById('matKhau').value.trim();
+    const nbDotDieuTriId = document.getElementById('nbDotDieuTriId').value.trim();
+
+    if (!taiKhoan || !matKhau) { alert('Vui lòng nhập Tài khoản và Mật khẩu.'); return; }
+
+    setLoading('btnGet', true, '📡 GET Dữ Liệu');
+
+    try {
+        // Lấy token
+        const token = await getAccessToken(baseUrl, taiKhoan, matKhau);
+        state.token = token;
+        saveState();
+        showToken(token);
+
+        if (token.startsWith('DEBUG_LOGIN_RESPONSE:')) {
+            showResponse('=== LỖI LẤY TOKEN ===\n\n' + token);
+            setLoading('btnGet', false, '📡 GET Dữ Liệu');
+            return;
+        }
+
+        // Gọi API
+        const apiUrl = baseUrl +
+            '/api/his/v1/nb-dich-vu/tong-hop?page=0&size=10&active=true&nbDotDieuTriId=' +
+            encodeURIComponent(nbDotDieuTriId);
+
+        const res = await fetch(apiUrl, {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type':  'application/json'
+            }
+        });
+
+        const httpCode = res.status;
+        let body;
+        try {
+            body = await res.json();
+            state.lastResponse = body;
+            saveState();
+            const pretty = JSON.stringify(body, null, 2);
+            showResponse('HTTP CODE: ' + httpCode + '\n\n' + pretty);
+        } catch {
+            const text = await res.text();
+            showResponse('HTTP CODE: ' + httpCode + '\n\n' + text);
+        }
+
+    } catch (err) {
+        showResponse('Lỗi fetch: ' + err.message +
+            '\n\n(Kiểm tra CORS hoặc kết nối mạng)');
+    }
+
+    setLoading('btnGet', false, '📡 GET Dữ Liệu');
+}
+
+function showResponse(text) {
+    const box  = document.getElementById('responseBox');
+    const area = document.getElementById('responseArea');
+    area.value = text;
+    box.style.display = 'block';
+}
+
+/* ============================================================
+   HELPER: TÌM GIÁ TRỊ THEO KEY TRONG JSON LỒNG NHAU
+   ============================================================ */
+
+function findValueByKey(data, key) {
+    if (typeof data !== 'object' || data === null) return null;
+    if (key in data && (typeof data[key] !== 'object' || data[key] === null)) {
+        return data[key];
+    }
+    for (const v of Object.values(data)) {
+        const result = findValueByKey(v, key);
+        if (result !== null && result !== undefined) return result;
+    }
+    return null;
+}
+
+/* ============================================================
+   HELPER: TÌM OBJECT DỊCH VỤ THEO maDichVu
+   ============================================================ */
+
+function findServiceByMaDichVu(data, maDichVu) {
+    if (typeof data !== 'object' || data === null) return null;
+    if (!Array.isArray(data) && String(data.maDichVu) === String(maDichVu)) {
+        return data;
+    }
+    for (const v of Object.values(data)) {
+        const result = findServiceByMaDichVu(v, maDichVu);
+        if (result !== null) return result;
+    }
+    return null;
+}
+
+/* ============================================================
+   BUILD HL7
+   ============================================================ */
+
+function buildHL7(soPhieu, maNb, tenNb, maHoSo, id, maDichVu, tenDichVu) {
+    const msh = `MSH|^~\\&|LABCONN|LABCONN|HL7_HIS|HIS|||OML^O21^OML_O21|${soPhieu}|P|2.5|||AL|ER|VNM|UNICODE UTF-8`;
+    const pid = `PID|1|${maNb}|||^${tenNb}`;
+    const pv1 = `PV1|1||||||||||||||||||${maHoSo}`;
+    const orc = `ORC|NW|${soPhieu}`;
+    const obr = `OBR||${id}||${maDichVu}^${tenDichVu}`;
+    return [msh, pid, pv1, orc, obr].join('\\r\\n') + '\\r\\n';
+}
+
+/* ============================================================
+   SINH BẢN TIN HL7
+   ============================================================ */
+
+function genHL7() {
+    const errDiv     = document.getElementById('hl7Error');
+    const successDiv = document.getElementById('hl7Success');
+    const resultBox  = document.getElementById('hl7ResultBox');
+
+    errDiv.style.display     = 'none';
+    successDiv.style.display = 'none';
+    resultBox.style.display  = 'none';
+
+    const maDichVuSearch = document.getElementById('maDichVuSearch').value.trim();
+
+    if (!maDichVuSearch) {
+        errDiv.textContent = '❌ Vui lòng nhập Mã dịch vụ.';
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    if (!state.lastResponse) {
+        errDiv.textContent = '❌ Chưa có dữ liệu. Vui lòng GET dữ liệu trước.';
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    const serviceObj = findServiceByMaDichVu(state.lastResponse, maDichVuSearch);
+
+    if (!serviceObj) {
+        errDiv.textContent = `❌ Không tìm thấy dịch vụ có maDichVu = "${maDichVuSearch}" trong dữ liệu.`;
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    const id        = serviceObj.id        ?? findValueByKey(serviceObj, 'id');
+    const maDichVu  = serviceObj.maDichVu  ?? findValueByKey(serviceObj, 'maDichVu');
+    const tenDichVu = serviceObj.tenDichVu ?? findValueByKey(serviceObj, 'tenDichVu');
+
+    const soPhieu = findValueByKey(state.lastResponse, 'soPhieu');
+    const maNb    = findValueByKey(state.lastResponse, 'maNb');
+    const tenNb   = findValueByKey(state.lastResponse, 'tenNb');
+    const maHoSo  = findValueByKey(state.lastResponse, 'maHoSo');
+
+    const missing = [];
+    if (!soPhieu)   missing.push('soPhieu');
+    if (!maNb)      missing.push('maNb');
+    if (!tenNb)     missing.push('tenNb');
+    if (!maHoSo)    missing.push('maHoSo');
+    if (!id)        missing.push('id');
+    if (!maDichVu)  missing.push('maDichVu');
+    if (!tenDichVu) missing.push('tenDichVu');
+
+    if (missing.length > 0) {
+        errDiv.innerHTML =
+            `❌ Tìm thấy dịch vụ nhưng thiếu các field: <b>${missing.join(', ')}</b>.<br>` +
+            `Object dịch vụ tìm được:<br><pre style="margin-top:8px;">${escHtml(JSON.stringify(serviceObj, null, 2))}</pre>`;
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    const hl7 = buildHL7(soPhieu, maNb, tenNb, maHoSo, id, maDichVu, tenDichVu);
+
+    successDiv.innerHTML = `✅ Sinh bản tin thành công cho maDichVu = <b>${escHtml(maDichVuSearch)}</b>`;
+    successDiv.style.display = 'block';
+
+    document.getElementById('hl7Output').value = hl7;
+    resultBox.style.display = 'block';
+}
+
+/* ============================================================
+   COPY HL7
+   ============================================================ */
+
+function copyHL7() {
+    const ta = document.getElementById('hl7Output');
+    ta.select();
+    ta.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(ta.value).then(() => {
+        const notice = document.getElementById('copyNotice');
+        notice.style.display = 'inline';
+        setTimeout(() => notice.style.display = 'none', 2000);
+    });
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function escAttr(str) {
+    return String(str).replace(/'/g, "\\'");
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+
+renderServers();
+
+// Khôi phục token nếu có
+if (state.token) {
+    showToken(state.token);
+}
+
+// Khôi phục response nếu có
+if (state.lastResponse) {
+    showResponse('(Dữ liệu từ session trước)\n\n' +
+        JSON.stringify(state.lastResponse, null, 2));
+}
+</script>
+
+</body>
+</html>
