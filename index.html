@@ -278,30 +278,62 @@
 
     .divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 
-    /* CORS notice */
-    .cors-notice {
-        background: #fff8e1;
-        border: 1px solid #ffe082;
-        border-left: 4px solid #f9a825;
+    /* CORS proxy toggle */
+    .cors-bar {
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        border-left: 4px solid #388e3c;
         padding: 12px 16px;
         border-radius: 6px;
         margin-bottom: 20px;
         font-size: 13px;
-        color: #5d4037;
-        line-height: 1.6;
+        color: #1b5e20;
+        line-height: 1.7;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
     }
-    .cors-notice strong { color: #e65100; }
+    .cors-bar label { margin: 0; color: #1b5e20; font-weight: 600; font-size: 13px; }
+    .cors-bar .cors-desc { color: #388e3c; font-size: 12px; }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 42px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+        position: absolute; cursor: pointer; inset: 0;
+        background: #bdbdbd; border-radius: 22px;
+        transition: background 0.2s;
+    }
+    .toggle-slider:before {
+        content: ''; position: absolute;
+        width: 16px; height: 16px; left: 3px; bottom: 3px;
+        background: #fff; border-radius: 50%;
+        transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: #388e3c; }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
 </style>
 </head>
 <body>
 
 <div class="page-title">🏥 Mini API Tool — HIS</div>
 
-<!-- CORS NOTICE -->
-<div class="cors-notice">
-    ⚠️ <strong>Lưu ý CORS:</strong> Khi chạy trên GitHub Pages, trình duyệt sẽ gửi request trực tiếp tới API server.
-    Nếu API server <strong>chưa bật CORS</strong> cho domain của bạn, request sẽ bị chặn.
-    Trong trường hợp đó, hãy dùng extension <strong>CORS Unblock</strong> trên Chrome/Firefox, hoặc chạy file này ở <strong>localhost</strong>.
+<!-- CORS PROXY TOGGLE -->
+<div class="cors-bar">
+    <label class="toggle-switch">
+        <input type="checkbox" id="corsProxyToggle" onchange="saveCorsProxy()">
+        <span class="toggle-slider"></span>
+    </label>
+    <div>
+        <label for="corsProxyToggle">🔀 Dùng CORS Proxy (corsproxy.io)</label><br>
+        <span class="cors-desc">Bật khi API server chưa cấu hình CORS — không cần extension trình duyệt. Request sẽ đi qua <b>corsproxy.io</b> trước khi tới server.</span>
+    </div>
 </div>
 
 <!-- ====================================================== -->
@@ -414,13 +446,25 @@ const DEFAULT_SERVERS = { "TUDU PROD": "https://api-bvtudu.tudu.com.vn" };
 let state = {
     servers:      JSON.parse(localStorage.getItem('apiTool_servers')  || 'null') || { ...DEFAULT_SERVERS },
     token:        localStorage.getItem('apiTool_token')   || '',
-    lastResponse: JSON.parse(localStorage.getItem('apiTool_lastResponse') || 'null')
+    lastResponse: JSON.parse(localStorage.getItem('apiTool_lastResponse') || 'null'),
+    corsProxy:    localStorage.getItem('apiTool_corsProxy') === 'true'
 };
+
+function saveCorsProxy() {
+    state.corsProxy = document.getElementById('corsProxyToggle').checked;
+    localStorage.setItem('apiTool_corsProxy', state.corsProxy);
+}
+
+function proxyUrl(url) {
+    if (!state.corsProxy) return url;
+    return 'https://corsproxy.io/?' + encodeURIComponent(url);
+}
 
 function saveState() {
     localStorage.setItem('apiTool_servers',      JSON.stringify(state.servers));
     localStorage.setItem('apiTool_token',        state.token);
     localStorage.setItem('apiTool_lastResponse', JSON.stringify(state.lastResponse));
+    localStorage.setItem('apiTool_corsProxy',    state.corsProxy);
 }
 
 /* ============================================================
@@ -475,7 +519,7 @@ function deleteServer(name) {
    ============================================================ */
 
 async function getAccessToken(baseUrl, taiKhoan, matKhau) {
-    const url = baseUrl + '/api/his/v1/auth/login';
+    const url = proxyUrl(baseUrl + '/api/his/v1/auth/login');
     const res = await fetch(url, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -560,9 +604,9 @@ async function getData() {
         }
 
         // Gọi API
-        const apiUrl = baseUrl +
+        const apiUrl = proxyUrl(baseUrl +
             '/api/his/v1/nb-dich-vu/tong-hop?page=0&size=10&active=true&nbDotDieuTriId=' +
-            encodeURIComponent(nbDotDieuTriId);
+            encodeURIComponent(nbDotDieuTriId));
 
         const res = await fetch(apiUrl, {
             headers: {
@@ -750,6 +794,9 @@ function escAttr(str) {
    ============================================================ */
 
 renderServers();
+
+// Khôi phục trạng thái CORS proxy
+document.getElementById('corsProxyToggle').checked = state.corsProxy;
 
 // Khôi phục token nếu có
 if (state.token) {
